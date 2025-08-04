@@ -52,7 +52,7 @@ app.get('/api/health', (req, res) => {
 })
 
 // Import routes
-import authRoutes from './routes/authRoutes.js'
+import authRoutes from './routes/auth.js'
 
 // API routes
 app.use('/api/auth', authRoutes)
