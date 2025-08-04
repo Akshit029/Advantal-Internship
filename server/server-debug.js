@@ -5,7 +5,6 @@ import helmet from 'helmet'
 import compression from 'compression'
 import morgan from 'morgan'
 import rateLimit from 'express-rate-limit'
-import connectDB from './config/db.js'
 
 // Load environment variables
 dotenv.config()
@@ -13,8 +12,7 @@ dotenv.config()
 const app = express()
 const PORT = process.env.PORT || 5001
 
-// Connect to MongoDB
-connectDB()
+console.log('🔍 Debug: Starting server...')
 
 // Security middleware
 app.use(helmet())
@@ -38,12 +36,11 @@ app.use(express.json({ limit: '10mb' }))
 app.use(express.urlencoded({ extended: true, limit: '10mb' }))
 
 // Logging middleware
-if (process.env.NODE_ENV === 'development') {
-  app.use(morgan('dev'))
-}
+app.use(morgan('dev'))
 
-// Routes
+// Test route
 app.get('/api/health', (req, res) => {
+  console.log('🔍 Debug: Health check endpoint hit')
   res.json({ 
     message: 'Advantal Internship API is running!',
     timestamp: new Date().toISOString(),
@@ -51,17 +48,26 @@ app.get('/api/health', (req, res) => {
   })
 })
 
-// Import routes
-import authRoutes from './routes/auth.js'
+// Test auth route without import
+app.post('/api/auth/login', (req, res) => {
+  console.log('🔍 Debug: Login endpoint hit', req.body)
+  res.json({ 
+    message: 'Login endpoint working (debug mode)',
+    body: req.body
+  })
+})
 
-// API routes
-app.use('/api/auth', authRoutes)
-// app.use('/api/users', userRoutes)
-// app.use('/api/posts', postRoutes)
+app.post('/api/auth/register', (req, res) => {
+  console.log('🔍 Debug: Register endpoint hit', req.body)
+  res.json({ 
+    message: 'Register endpoint working (debug mode)',
+    body: req.body
+  })
+})
 
 // Error handling middleware
 app.use((err, req, res, next) => {
-  console.error(err.stack)
+  console.error('🔍 Debug: Error middleware:', err.stack)
   res.status(500).json({ 
     message: 'Something went wrong!',
     error: process.env.NODE_ENV === 'development' ? err.message : 'Internal server error'
@@ -70,28 +76,14 @@ app.use((err, req, res, next) => {
 
 // 404 handler
 app.use('*', (req, res) => {
+  console.log('🔍 Debug: 404 handler hit for:', req.originalUrl)
   res.status(404).json({ message: 'Route not found' })
 })
 
 // Start server
 app.listen(PORT, () => {
-  console.log(`🚀 Server running on port ${PORT}`)
+  console.log(`🚀 Debug Server running on port ${PORT}`)
   console.log(`📱 Environment: ${process.env.NODE_ENV || 'development'}`)
   console.log(`🔗 Health check: http://localhost:${PORT}/api/health`)
-  console.log(`🔗 Auth routes: /api/auth/login, /api/auth/register`)
-  console.log(`🔗 MongoDB connected Successfully`)
-  
-  // Debug: List all registered routes
-  console.log('🔍 Debug: Registered routes:')
-  app._router.stack.forEach(middleware => {
-    if (middleware.route) {
-      console.log(`   ${Object.keys(middleware.route.methods).join(',').toUpperCase()} ${middleware.route.path}`)
-    } else if (middleware.name === 'router') {
-      middleware.handle.stack.forEach(handler => {
-        if (handler.route) {
-          console.log(`   ${Object.keys(handler.route.methods).join(',').toUpperCase()} ${handler.route.path}`)
-        }
-      })
-    }
-  })
+  console.log(`🔗 Test login: POST http://localhost:${PORT}/api/auth/login`)
 }) 
